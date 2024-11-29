@@ -1,0 +1,5 @@
+# Ignore the writable directory
+writable/
+
+# Ignore the .env file
+.env

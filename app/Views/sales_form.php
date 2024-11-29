@@ -5,54 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales with AJAX</title>
     <script type="text/javascript" src="<?= base_url('assets/js/jquery-3.6.0.min.js') ?>"></script>
+    <link href="<?= base_url('assets/css/bootstrap.min.css') ?>" rel="stylesheet" >
+
+    
 
 </head>
+<style>
+
+#total-quantity{
+    font-size : 15px;
+}
+#total-sales{
+    font-size : 15px;
+}
+#total-point{
+    font-size : 15px;
+}
+
+
+hr {
+  border: none;
+  height: 0.5px !important;
+  /* Set the hr color */
+  color: #333;  /* old IE */
+  background-color: #333;  /* Modern Browsers */
+  margin-top : 1px
+}
+
+</style>
 <body>
     <!-- Form Input Penjualan -->
-    <h2>Input Penjualan Baru</h2>
+    <div class="container-sm">
+        <div class="row justify-content-center">
+            <div class="col">
+                <h4 class="text-center">Form Sales</h4>
+                <hr>
+            </div>
+        </div>
     <form id="sales-form">
-        <label for="menu_id">Menu:</label>
-        <select name="menu_id" id="menu_id" required>
-            <?php foreach ($menus as $menu): ?>
+
+        <div class="input-group mb-3">
+        <label class="input-group-text" for="menu_id">Menu : </label>
+        <select class="form-select-sm" id="menu_id" name="menu_id" required >
+        <?php foreach ($menus as $menu): ?>
                 <option value="<?= $menu['menu_id'] ?>">
                     <?= $menu['menu_name'] ?> - <?= number_format($menu['price'], 0, ',', '.') ?>
                 </option>
             <?php endforeach; ?>
-        </select><br><br>
+        </select>
+        </div>
 
-        <label for="quantity">Jumlah:</label>
-        <input type="number" name="quantity" id="quantity" min="1" required><br><br>
-
-        <label for="payment_type_id">Jenis Pembayaran:</label>
-        <select name="payment_type_id" id="payment_type_id">
+        <div class="input-group mb-3">
+        <span class="input-group-text">Jumlah</span>
+        <input type="number" class="form-control" name="quantity" id="quantity" min="1" required>
+        </div>
+        <div class="row">
+            <div class="col-8">
+            <div class="input-group mb-3">
+            <label class="input-group-text" for="pembayaran">Pembayaran : </label>
+            <select class="form-select-sm" id="payment_type_id" name="payment_type_id" required >
             <?php foreach ($paymentTypes as $type): ?>
                 <option value="<?= $type['payment_type_id'] ?>"><?= $type['payment_type_name'] ?></option>
             <?php endforeach; ?>
-        </select>
+            </select>
+            </div>
+            </div>
+            <div class="col-4">
+            <button type="submit" class="btn btn-success">Simpan</button>
+            </div>
 
-        <button type="submit">Simpan</button>
+        </div>
     </form>
+<hr>
+
+    <div class="row justify-content-center mb-3">
+            <div class="col mb-1">
+                <h4 class="text-center">Data Penjualan</h4>
+            </div>
+
+            <div class="row">
+                <div class="col-4 px-0">
+                <span class="badge bg-warning text-dark" id="total-quantity">0</span>
+                </div>
+                <div class="col-4 px-0">
+                <span class="badge bg-info text-dark" id="total-sales">0</span>
+                </div>
+                <div class="col-4 px-0">
+                <span class="badge bg-danger" id="total-point" >0</span>
+                </div>
+            </div>
 
 
-    <h2>Data Penjualan</h2>
-    <p>Total Jumlah Item Terjual: <span id="total-quantity">0</span></p>
-    <p>Total Penjualan: Rp <span id="total-sales">0</span></p>
-    <hr>
-    <label for="filter-date">Filter Tanggal:</label>
-    <input type="date" id="filter-date" value="<?= date('Y-m-d') ?>">
-    <button id="filter-btn">Tampilkan</button>
+            </div>
+    <div class="input-group mb-3">
+    <span class="input-group-text">Date :</span>
+    <input type="date" class="form-control"  id="filter-date" value="<?= date('Y-m-d') ?>">
+    <button id="filter-btn" class="btn btn-warning">Tampilkan</button>
+    </div>
 
-    <hr>
-    <!-- Tabel Penjualan -->
-  
-    <table border="1" id="sales-table">
+
+    <table border="1" class="table table-striped table-hover" id="sales-table">
         <thead>
             <tr>
                 <th>Menu</th>
                 <th>Qty</th>
                 <th>Payment</th>
                 <th>Total</th>
-                <th>Tanggal</th>
+                <th>Jam</th>
             </tr>
         </thead>
         <tbody>
@@ -60,8 +119,12 @@
         </tbody>
     </table>
 
- <script>
 
+            </div>
+</body>
+
+
+<script>
         function loadSales(date = '') {
 
             if (date === '') {
@@ -73,11 +136,21 @@
                  // Pastikan data tidak null
                 const totalQuantity = data.total_quantity ? data.total_quantity : 0;
                 const totalSales = data.total_sales ? data.total_sales : 0;
-
+                const totalPoint = data.total_point ? data.total_point : 0.0;
                 // Tampilkan data di elemen HTML
-                $('#total-quantity').text(totalQuantity);
-                $('#total-sales').text(totalSales.toLocaleString());
+                $('#total-quantity').text("Item : " + totalQuantity);
+                $('#total-sales').text("Rp : " + totalSales.toLocaleString());
             });
+
+            $.post('<?= base_url('/sales/point') ?>', { date: date }, function (data) {
+                 // Pastikan data tidak null
+                const totalPoint = data.total_points ? data.total_points : 0.0;
+                // Tampilkan data di elemen HTML
+                $('#total-point').text("Point : " + totalPoint.toLocaleString());
+            });
+
+
+
 
 
             $.post('<?= base_url('/sales/getSales') ?>', { date: date }, function (data) {
@@ -85,11 +158,11 @@
                 data.forEach(sale => {
                     rows += `
                         <tr>
-                            <td>${sale.menu_name}</td>
+                            <td>${sale.alias}</td>
                             <td>${sale.quantity}</td>
                             <td>${sale.payment_type_name}</td>
                             <td>${sale.total_price.toLocaleString()}</td>
-                            <td>${sale.sale_date}</td>
+                            <td>${sale.sale_time}</td>
                         </tr>
                     `;
                 });
@@ -125,7 +198,4 @@
             });
         });
     </script>
-
-
-</body>
 </html>

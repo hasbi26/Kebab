@@ -32,10 +32,11 @@ class Sales extends BaseController
 
         // Filter data penjualan berdasarkan tanggal
         $sales = $salesModel
-        ->select('sales.*, menu.menu_name, payment_types.payment_type_name')
+        ->select('sales.*, menu.menu_name, payment_types.payment_type_name, menu.alias, TIME(sales.sale_date) AS sale_time')
         ->join('menu', 'menu.menu_id = sales.menu_id')
         ->join('payment_types', 'payment_types.payment_type_id = sales.payment_type_id')
-        ->where('DATE(sale_date)', $date)
+        ->where('DATE(sales.sale_date)', $date)
+        ->orderBy('sale_time', 'ASC') // Sorting berdasarkan jam
         ->findAll();
 
 
@@ -56,6 +57,31 @@ class Sales extends BaseController
 
     return $this->response->setJSON($summary);
 }
+
+
+public function calculatePoints()
+    {
+        $salesModel = new SalesModel();
+
+        $date = $this->request->getPost('date') ?? date('Y-m-d'); // Default ke hari ini jika tanggal kosong
+
+        // Query untuk menghitung total point
+        $point = $salesModel
+                ->select('SUM(
+                    CASE
+                        WHEN sales.payment_type_id NOT IN (1, 2) THEN menu.point * 0.7 * sales.quantity
+                        ELSE menu.point * sales.quantity
+                    END
+                ) AS total_points')
+                ->join('menu', 'menu.menu_id = sales.menu_id') // Join untuk mendapatkan data point
+                ->where('DATE(sales.sale_date)', $date) // Filter berdasarkan tanggal
+                ->first(); // Ambil hasil pertama
+
+            return $this->response->setJSON($point);
+
+        // Menampilkan hasil
+        // return view('sales/points', ['sales' => $sales]);
+    }
 
 
 

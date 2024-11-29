@@ -10,5 +10,6 @@ $routes->get('/sales', 'Sales::index');
 $routes->post('/sales/save', 'Sales::save');
 $routes->post('/sales/getSales', 'Sales::getSales');
 $routes->post('/sales/summary', 'Sales::getSalesSummary');
+$routes->post('/sales/point', 'Sales::calculatePoints');
 
 
