@@ -12,16 +12,19 @@
 </head>
 <style>
 
-#total-quantity{
-    font-size : 15px;
-}
-#total-sales{
-    font-size : 15px;
-}
-#total-point{
+.badge{
     font-size : 15px;
 }
 
+
+.card{
+            width : 5rem;
+            height : 5rem;
+        }
+        .card-body {
+            padding : 0;
+            text-align : center;
+        }
 
 hr {
   border: none;
@@ -34,6 +37,46 @@ hr {
 
 </style>
 <body>
+
+<div class="collapse" id="navbarToggleExternalContent">
+  <div class="bg-dark p-4">
+
+
+  <ul class="list-group">
+  <li class="list-group-item">Point Bulan <span class="badge bg-danger text-white" id="month"> </span>  <span class="badge bg-success text-white" id="monthPoint">0</span> </li>
+
+  <li class="list-group-item list-group-item-primary">Total Penjualan Cash <span class="badge bg-danger text-white" id="TotCash"> 0.0 </span> </li>
+  <li class="list-group-item list-group-item-secondary">Total Penjualan Qris <span class="badge bg-danger text-white" id="TotQris"> 0.0 </span></li>
+  <li class="list-group-item list-group-item-success">Total Penjualan Gojek <span class="badge bg-danger text-white" id="TotGojek"> 0.0 </span></li>
+  <li class="list-group-item list-group-item-danger">Total Penjualan Shopee <span class="badge bg-danger text-white" id="TotShopee"> 0.0 </span></li>
+  <li class="list-group-item list-group-item-warning">Total Penjualan Grab <span class="badge bg-danger text-white" id="TotGrab"> 0.0 </span></li>
+  <li class="list-group-item list-group-item-info">A simple info list group item</li>
+  <li class="list-group-item list-group-item-light">A simple light list group item</li>
+  <li class="list-group-item list-group-item-dark">A simple dark list group item</li>
+</ul>
+
+
+             <!-- <div class="row">
+                    <div class="col-7">Penjualan_Bulan:<span class="badge bg-warning text-white" id="month"> </span>
+                    </div>
+                    <div class="col-5 text-end">
+                    Total Point  : 
+                    <span class="badge bg-success text-white" id="monthPoint">0</span>
+
+                    </div>
+            </div> -->
+  
+  </div>
+</div>
+<nav class="navbar navbar-dark bg-dark">
+  <div class="container-fluid">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarToggleExternalContent" aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+  </div>
+</nav>
+
+
     <!-- Form Input Penjualan -->
     <div class="container-sm">
         <div class="row justify-content-center">
@@ -78,26 +121,17 @@ hr {
     </form>
 <hr>
 
-    <div class="row justify-content-center mb-3">
-            <div class="col mb-1">
-                <h4 class="text-center">Data Penjualan</h4>
-            </div>
+
 
             <div class="row">
-                <div class="col-4 px-0">
-                <span class="badge bg-warning text-dark" id="total-quantity">0</span>
-                </div>
-                <div class="col-4 px-0">
-                <span class="badge bg-info text-dark" id="total-sales">0</span>
-                </div>
-                <div class="col-4 px-0">
+                <div class="col text-center">
                 <span class="badge bg-danger" id="total-point" >0</span>
                 </div>
             </div>
 
 
             </div>
-    <div class="input-group mb-3">
+    <div class="input-group my-3">
     <span class="input-group-text">Date :</span>
     <input type="date" class="form-control"  id="filter-date" value="<?= date('Y-m-d') ?>">
     <button id="filter-btn" class="btn btn-warning">Tampilkan</button>
@@ -107,9 +141,9 @@ hr {
     <table border="1" class="table table-striped table-hover" id="sales-table">
         <thead>
             <tr>
-                <th>Menu</th>
-                <th>Qty</th>
-                <th>Payment</th>
+                <th>#Menu</th>
+                <th>qty</th>
+                <th>Pay</th>
                 <th>Total</th>
                 <th>Jam</th>
             </tr>
@@ -132,6 +166,46 @@ hr {
                     date = today;
                 }
 
+
+                $.post('<?= base_url('/sales/getSalesByPaymentType') ?>', { date: date }, function (data) {
+    // Reset semua nilai badge ke 0.0
+                $('#TotCash').text('0.0');
+                $('#TotQris').text('0.0');
+                $('#TotGojek').text('0.0');
+                $('#TotShopee').text('0.0');
+                $('#TotGrab').text('0.0');
+
+    // Update nilai badge berdasarkan data dari server
+    data.forEach(item => {
+        switch (item.payment_type_name.toLowerCase()) {
+            case 'cash':
+                $('#TotCash').text(item.total_sales.toLocaleString());
+                break;
+            case 'qris':
+                $('#TotQris').text(item.total_sales.toLocaleString());
+                break;
+            case 'gojek':
+                $('#TotGojek').text(item.total_sales.toLocaleString());
+                break;
+            case 'shopee':
+                $('#TotShopee').text(item.total_sales.toLocaleString());
+                break;
+            case 'grab':
+                $('#TotGrab').text(item.total_sales.toLocaleString());
+                break;
+            default:
+                console.warn(`Payment type ${item.payment_type_name} tidak dikenali.`);
+        }
+    });
+});
+
+
+
+
+
+
+
+
                 $.post('<?= base_url('/sales/summary') ?>', { date: date }, function (data) {
                  // Pastikan data tidak null
                 const totalQuantity = data.total_quantity ? data.total_quantity : 0;
@@ -150,28 +224,49 @@ hr {
             });
 
 
-
+            $.post('<?= base_url('/sales/acumulatepoint') ?>', { date: date }, function (data) {
+                $('#monthPoint').text(data.total_points.toLocaleString());
+                 console.log("total point",data.total_points);
+            });
 
 
             $.post('<?= base_url('/sales/getSales') ?>', { date: date }, function (data) {
-                let rows = '';
-                data.forEach(sale => {
-                    rows += `
-                        <tr>
-                            <td>${sale.alias}</td>
-                            <td>${sale.quantity}</td>
-                            <td>${sale.payment_type_name}</td>
-                            <td>${sale.total_price.toLocaleString()}</td>
-                            <td>${sale.sale_time}</td>
-                        </tr>
-                    `;
-                });
-                $('#sales-table tbody').html(rows);
-            });
+    let rows = '';
+    let totalQty = 0;
+    let totalPrice = 0;
+
+
+    data.forEach(sale => {
+        totalQty += parseInt(sale.quantity); // Menambahkan ke total quantity
+        totalPrice += parseFloat(sale.total_price); // Menambahkan ke total price
+        rows += `
+            <tr>
+                <td>${sale.alias}</td>
+                <td>${sale.quantity}</td>
+                <td>${sale.payment_type_name}</td>
+                <td>${sale.total_price.toLocaleString()}</td>
+                <td>${sale.sale_time}</td>
+            </tr>
+        `;
+    });
+
+    // Menambahkan baris ke tabel
+    rows += `
+        <tr style="font-weight: bold;">
+            <td colspan="1" style="text-align: right;">Total</td>
+            <td>${totalQty}</td>
+            <td>-</td>
+            <td>${totalPrice.toLocaleString()}</td>
+            <td>-</td>
+        </tr>
+    `;
+
+    $('#sales-table tbody').html(rows);
+});
+
+
+
         }
-
-
-
 
         // Muat data penjualan default (hari ini) saat halaman dimuat
         $(document).ready(function () {
@@ -197,5 +292,38 @@ hr {
                 });
             });
         });
+
+
+        document.addEventListener('DOMContentLoaded', function () {
+    const monthNames = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+
+    const filterDateInput = document.getElementById('filter-date');
+    const monthBadge = document.getElementById('month');
+
+    // Fungsi untuk memperbarui nama bulan
+    function updateMonthName(dateString) {
+        const date = new Date(dateString);
+        const monthName = monthNames[date.getMonth()]; // Ambil nama bulan berdasarkan indeks
+        monthBadge.textContent = monthName; // Tampilkan nama bulan di badge
+    }
+
+    // Inisialisasi dengan nilai awal
+    updateMonthName(filterDateInput.value);
+
+    // Tambahkan event listener untuk perubahan pada input tanggal
+    filterDateInput.addEventListener('change', function () {
+        updateMonthName(this.value);
+    });
+});
+
     </script>
+
+
+
+<script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>" > </script>
+
+
 </html>

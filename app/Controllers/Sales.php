@@ -8,6 +8,14 @@ use App\Models\PaymentTypeModel;
 
 class Sales extends BaseController
 {
+
+    public function generateTimestampedID($length = 8)
+    {
+        $timestamp = dechex(time()); // Timestamp dalam format heksadesimal
+        $randomHex = bin2hex(random_bytes(4)); // Heksadesimal acak
+        return substr($timestamp . $randomHex, 0, $length); // Gabungkan timestamp dan hex acak
+    }
+
     public function index()
     {
         $menuModel = new MenuModel();
@@ -28,11 +36,9 @@ class Sales extends BaseController
 
         // Ambil tanggal dari request, gunakan default hari ini jika kosong
         $date = $this->request->getPost('date') ?? date('Y-m-d');
-
-
         // Filter data penjualan berdasarkan tanggal
         $sales = $salesModel
-        ->select('sales.*, menu.menu_name, payment_types.payment_type_name, menu.alias, TIME(sales.sale_date) AS sale_time')
+        ->select('sales.*, menu.point, menu.menu_name, payment_types.payment_type_name, menu.alias, TIME(sales.sale_date) AS sale_time')
         ->join('menu', 'menu.menu_id = sales.menu_id')
         ->join('payment_types', 'payment_types.payment_type_id = sales.payment_type_id')
         ->where('DATE(sales.sale_date)', $date)
@@ -59,6 +65,27 @@ class Sales extends BaseController
 }
 
 
+public function getSalesByPaymentType()
+{
+    $salesModel = new SalesModel();
+
+    // Ambil tanggal dari request, gunakan default hari ini jika kosong
+    $date = $this->request->getPost('date') ?? date('Y-m-d');
+
+    // Query untuk mendapatkan total penjualan per payment type
+    $salesByPaymentType = $salesModel
+        ->select('payment_types.payment_type_name, SUM(sales.total_price) as total_sales, COUNT(sales.sales_id) as total_transactions')
+        ->join('payment_types', 'payment_types.payment_type_id = sales.payment_type_id')
+        ->where('DATE(sales.sale_date)', $date)
+        ->groupBy('payment_types.payment_type_id') // Kelompokkan berdasarkan payment type
+        ->orderBy('payment_types.payment_type_name', 'ASC') // Sorting berdasarkan nama payment type
+        ->findAll();
+
+    // Kirim data dalam format JSON
+    return $this->response->setJSON($salesByPaymentType);
+}
+
+
 public function calculatePoints()
     {
         $salesModel = new SalesModel();
@@ -78,10 +105,43 @@ public function calculatePoints()
                 ->first(); // Ambil hasil pertama
 
             return $this->response->setJSON($point);
-
-        // Menampilkan hasil
-        // return view('sales/points', ['sales' => $sales]);
     }
+
+    public function calculatePointsByMonth()
+{
+    $salesModel = new SalesModel();
+
+
+    $date = $this->request->getPost('date');
+
+    if (!$date || !strtotime($date)) {
+        return $this->response->setJSON(['error' => 'Invalid date format'])->setStatusCode(400);
+    }
+
+
+        // Ekstrak bulan dan tahun dari tanggal
+        $month = date('m', strtotime($date));
+        $year = date('Y', strtotime($date));
+
+    // Tentukan rentang tanggal dari tanggal 1 hingga akhir bulan
+    $startDate = "$year-$month-01";
+    $endDate = date("Y-m-t", strtotime($startDate)); // Menghitung tanggal terakhir bulan
+
+    // Query untuk menghitung total point
+    $point = $salesModel
+        ->select('SUM(
+            CASE
+                WHEN sales.payment_type_id NOT IN (1, 2) THEN menu.point * 0.7 * sales.quantity
+                ELSE menu.point * sales.quantity
+            END
+        ) AS total_points')
+        ->join('menu', 'menu.menu_id = sales.menu_id') // Join untuk mendapatkan data point
+        ->where('sales.sale_date >=', $startDate) // Mulai dari tanggal 1
+        ->where('sales.sale_date <=', $endDate)   // Sampai tanggal terakhir bulan
+        ->first(); // Ambil hasil pertama
+
+    return $this->response->setJSON($point);
+}
 
 
 
@@ -94,6 +154,8 @@ public function save()
     $datetime = new \DateTime('now', new \DateTimeZone('Asia/Jakarta'));  // Pastikan menggunakan namespace global "\DateTime"
     $formattedDate = $datetime->format('Y-m-d\TH:i');
     $saleDate = $formattedDate; // Ambil tanggal dari input form
+
+    $salesId = $this->generateTimestampedID();
 
     // Jika tidak ada tanggal yang diberikan, gunakan tanggal saat ini
     if (empty($saleDate)) {
@@ -109,6 +171,7 @@ public function save()
 
     // Simpan ke database
     $salesModel->insert([
+        'sales_id' => $salesId, // Gunakan ID unik pendek
         'menu_id' => $menuId,
         'quantity' => $quantity,
         'total_price' => $totalPrice,
@@ -116,7 +179,15 @@ public function save()
         'sale_date' => $saleDate // Kirimkan tanggal yang diterima dari pengguna
     ]);
 
+    // $db = \Config\Database::connect();
+    // var_dump($db->getLastQuery());
+    // die();
+
     return $this->response->setJSON(['success' => true]);
 }
+
+
+
+
 
 }
