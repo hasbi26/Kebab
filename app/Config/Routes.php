@@ -13,7 +13,11 @@ $routes->post('/sales/summary', 'Sales::getSalesSummary');
 $routes->post('/sales/point', 'Sales::calculatePoints');
 $routes->post('/sales/acumulatepoint', 'Sales::calculatePointsByMonth');
 $routes->post('/sales/getSalesByPaymentType', 'Sales::getSalesByPaymentType');
+$routes->post('/sales/getFilteredSales', 'Sales::getFilteredSales');
 $routes->get('/dash', 'Dashboard::index');
 $routes->post('/dash/salesMonth', 'Dashboard::GetSalesMonthly');
 
+$routes->post('/pembelian/createPurchase', 'Pembelian::createPurchase');
+$routes->get('/pembelian/getItems', 'Pembelian::getItems');
+$routes->get('/pembelian/getPembelian', 'Dashboard::getPembelian');
 

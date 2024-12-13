@@ -187,6 +187,27 @@ public function save()
 }
 
 
+public function getFilteredSales()
+{
+    $salesModel = new SalesModel();
+
+    // Ambil data dari request
+    $month = $this->request->getPost('month');
+    $week = $this->request->getPost('week');
+    $year = $this->request->getPost('year');
+
+    // Query untuk filter bulan dan minggu
+    $filteredSales = $salesModel
+        ->select('MONTH(sale_date) AS month, WEEK(sale_date, 1) AS week, YEAR(sale_date) AS year, SUM(quantity) As qty, SUM(total_price) AS total_sales')
+        ->where('YEAR(sale_date)', $year)
+        ->where('MONTH(sale_date)', $month)
+        ->where('WEEK(sale_date, 1)', $week)
+        ->groupBy('YEAR(sale_date), MONTH(sale_date), WEEK(sale_date, 1)')
+        ->findAll();
+
+    return $this->response->setJSON($filteredSales);
+}
+
 
 
 

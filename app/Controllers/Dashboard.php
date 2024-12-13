@@ -5,13 +5,11 @@ namespace App\Controllers;
 use App\Models\MenuModel;
 use App\Models\SalesModel;
 use App\Models\PaymentTypeModel;
+use App\Models\PembelianModel;
 
 
 class Dashboard extends BaseController
 {
-
-
-
 
     public function index(): string
     {
@@ -44,7 +42,18 @@ class Dashboard extends BaseController
         // Kirim data dalam format JSON
         return $this->response->setJSON($sales);
 
+    }
 
+
+    public function getPembelian()
+    {
+        $pembelianModel = new PembelianModel();
+
+        // Ambil semua data pembelian
+        $data = $pembelianModel->findAll();
+
+        // Kirim data dalam format JSON untuk DataTables
+        return $this->response->setJSON(['data' => $data]);
     }
 
 

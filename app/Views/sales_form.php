@@ -6,9 +6,6 @@
     <title>Sales with AJAX</title>
     <script type="text/javascript" src="<?= base_url('assets/js/jquery-3.6.0.min.js') ?>"></script>
     <link href="<?= base_url('assets/css/bootstrap.min.css') ?>" rel="stylesheet" >
-
-    
-
 </head>
 <style>
 
@@ -54,17 +51,6 @@ hr {
   <li class="list-group-item list-group-item-light">A simple light list group item</li>
   <li class="list-group-item list-group-item-dark">A simple dark list group item</li>
 </ul>
-
-
-             <!-- <div class="row">
-                    <div class="col-7">Penjualan_Bulan:<span class="badge bg-warning text-white" id="month"> </span>
-                    </div>
-                    <div class="col-5 text-end">
-                    Total Point  : 
-                    <span class="badge bg-success text-white" id="monthPoint">0</span>
-
-                    </div>
-            </div> -->
   
   </div>
 </div>
@@ -226,7 +212,6 @@ hr {
 
             $.post('<?= base_url('/sales/acumulatepoint') ?>', { date: date }, function (data) {
                 $('#monthPoint').text(data.total_points.toLocaleString());
-                 console.log("total point",data.total_points);
             });
 
 
@@ -320,8 +305,6 @@ hr {
 });
 
     </script>
-
-
 
 <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>" > </script>
 

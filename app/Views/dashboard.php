@@ -6,6 +6,10 @@
     <title>Bootstrap 5 Simple Admin Dashboard</title>
     <link href="<?= base_url('assets/css/bootstrap.min.css') ?>" rel="stylesheet" >
     <script type="text/javascript" src="<?= base_url('assets/js/jquery-3.6.0.min.js') ?>"></script>
+    <script src="<?= base_url('assets/js/jquery.dataTables.min.js') ?>"></script>
+    <link href="<?= base_url('assets/css/jquery.dataTables.min.css') ?>" rel="stylesheet">
+
+
 
     <style>
         .card{
@@ -16,6 +20,28 @@
             padding : 0;
             text-align : center;
         }
+
+
+        .item-select {
+    width: 120px;
+}
+
+.qty-input {
+    width: 50px;
+}
+
+.harga-input {
+    width: 60px;
+}
+
+.subtotal-input {
+    width: 60px;
+}
+
+.remove-item {
+    width: 60px;
+}
+
     </style>
 
 </head>
@@ -66,6 +92,30 @@
     <button id="filter-btn" class="btn btn-warning">Tampilkan</button>
     </div>
 
+
+    <!-- Tambahkan Tabel HTML -->
+        <table id="purchases-table" class="display">
+            <thead>
+                <tr>
+                    <!-- <th>ID</th> -->
+                    <th>Tanggal</th>
+                    <!-- <th>Supplier</th> -->
+                    <th>Total Harga</th>
+                    <!-- <th>Aksi</th> -->
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data akan diisi oleh DataTables -->
+            </tbody>
+            <tfoot>
+        <tr>
+            <th style="text-align:right">Total:</th>
+            <th id="grand-total">Rp 0</th>
+        </tr>
+    </tfoot>
+        </table>
+
+
     <table border="1" class="table table-striped table-hover" id="sales-table">
         <thead>
             <tr>
@@ -84,10 +134,6 @@
 
         </div>
 
-
-    
-    
-    
     
     </div>
     </div>
@@ -100,8 +146,45 @@
     </h2>
     <div id="panelsStayOpen-collapseTwo" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingTwo">
       <div class="accordion-body">
-        <strong>This is the second item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-      </div>
+
+      <div class="filter-section mb-3">
+    <label for="filterMonth">Pilih Bulan:</label>
+    <select id="filterMonth" class="form-control d-inline-block w-auto">
+        <!-- Pilihan bulan akan diisi oleh JavaScript -->
+    </select>
+
+    <label for="filterWeek" class="ms-2">Pilih Minggu ke:</label>
+    <select id="filterWeek" class="form-control d-inline-block w-auto">
+        <!-- Pilihan minggu akan diisi oleh JavaScript -->
+    </select>
+
+    <button id="filterData" class="btn btn-primary ms-3">Filter</button>
+</div>
+
+<!-- Tabel Data -->
+<div class="table-responsive">
+    <h3>Penjualan</h3>
+    <table class="table table-bordered table-striped" id="salesTable">
+        <thead>
+            <tr>
+                <th>Bulan</th>
+                <th>Minggu ke</th>
+                <th>Tahun</th>
+                <th>qty</th>
+                <th>Total Penjualan</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Data akan dimuat dengan AJAX -->
+        </tbody>
+    </table>
+</div>
+
+
+
+
+
+    </div>
     </div>
   </div>
   <div class="accordion-item">
@@ -111,9 +194,47 @@
       </button>
     </h2>
     <div id="panelsStayOpen-collapseThree" class="accordion-collapse collapse" aria-labelledby="panelsStayOpen-headingThree">
-      <div class="accordion-body">
-        <strong>This is the third item's accordion body.</strong> It is hidden by default, until the collapse plugin adds the appropriate classes that we use to style each element. These classes control the overall appearance, as well as the showing and hiding via CSS transitions. You can modify any of this with custom CSS or overriding our default variables. It's also worth noting that just about any HTML can go within the <code>.accordion-body</code>, though the transition does limit overflow.
-      </div>
+      <div class="accordion-body p-0">
+
+      <form id="purchase-form">
+    <input type="date" id="tanggal" name="tanggal" required>
+    <input type="text" id="supplier_name" name="supplier_name" placeholder="Supplier Name" required>
+    <table class="table-responsive" id="details-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>Qty</th>
+                <th>Harga</th>
+                <th>Subtotal</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <select name="item_id[]" class="item-select" required>
+                        <!-- Options akan diisi oleh AJAX -->
+                    </select>
+                </td>
+                <td><input type="number" name="qty[]" class="qty-input" required></td>
+                <td><input type="number" name="harga[]" class="harga-input" readonly required></td>
+                <td><input type="number" name="subtotal[]" class="subtotal-input" readonly></td>
+                <td><button type="button" class="remove-item">Hapus</button></td>
+            </tr>
+        </tbody>
+        <tfoot>
+        <tr>
+            <td colspan="1" style="font-weight: bold;">Total :</td>
+            <td colspan="3"><input type="number" id="total-keseluruhan" readonly></td>
+        </tr>
+    </tfoot>
+    </table>
+    <button type="button" id="add-item">Tambah Item</button>
+    <button type="submit">Submit</button>
+</form>
+
+
+    </div>
     </div>
   </div>
 </div>
@@ -121,34 +242,167 @@
 
 
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <script src="<?= base_url('assets/js/bootstrap.bundle.min.js') ?>" ></script>
     <script src="<?= base_url('assets/js/popper.min.js') ?>" ></script>
     <!-- <script src="<?= base_url('assets/js/bootstrapAdmin.min.js') ?>" ></script> -->
     <script src="<?= base_url('assets/js/chartist.min.js') ?>"></script>
     <!-- Github buttons -->
-    <!-- <script async defer src="https://buttons.github.io/buttons.js"></script> -->
     <script>
-        // new Chartist.Line('#traffic-chart', {
-        //     labels: ['January', 'Februrary', 'March', 'April', 'May', 'June'],
-        //     series: [
-        //         [23000, 25000, 19000, 34000, 56000, 64000]
-        //     ]
-        //     }, {
-        //     low: 0,
-        //     showArea: true
-        // });
+
     </script>
 <script>
 
-$(document).ready(function () {
-            loadSales();
 
-            $('#filter-btn').click(function () {
+$(document).ready(function () {
+  loadSales();
+  loadItems();
+ calculateTotalKeseluruhan();
+
+
+
+              $('#filter-btn').click(function () {
                 const date = $('#filter-date').val();
                 loadSales(date);
             });
+    const currentDate = new Date();
+    const currentYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1; // Bulan dimulai dari 0
+    const currentWeek = getCurrentWeek(currentDate);
 
-})
+    // Inisialisasi pilihan bulan (Januari - Desember)
+    const months = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
+    months.forEach((month, index) => {
+        $('#filterMonth').append(
+            `<option value="${index + 1}" ${index + 1 === currentMonth ? 'selected' : ''}>${month}</option>`
+        );
+    });
+
+    // Fungsi untuk mendapatkan minggu dari bulan tertentu
+    function getWeeksInMonth(year, month) {
+        const firstDay = new Date(year, month - 1, 1);
+        const lastDay = new Date(year, month, 0);
+        const weeks = [];
+        let start = new Date(firstDay);
+
+        while (start <= lastDay) {
+            const week = getCurrentWeek(start);
+            if (!weeks.includes(week)) weeks.push(week);
+            start.setDate(start.getDate() + 7); // Tambah 7 hari
+        }
+        return weeks;
+    }
+
+    // Fungsi untuk mendapatkan minggu ke-n
+    function getCurrentWeek(date) {
+        const oneJan = new Date(date.getFullYear(), 0, 1);
+        const numberOfDays = Math.floor((date - oneJan) / (24 * 60 * 60 * 1000));
+        return Math.ceil((date.getDay() + 1 + numberOfDays) / 7);
+    }
+
+    // Isi minggu berdasarkan bulan
+    function populateWeeks(month, year) {
+        const weeks = getWeeksInMonth(year, month);
+        $('#filterWeek').html(''); // Kosongkan dulu
+        weeks.forEach(week => {
+            $('#filterWeek').append(
+                `<option value="${week}" ${week === currentWeek ? 'selected' : ''}>Minggu ke-${week}</option>`
+            );
+        });
+    }
+
+    // Isi minggu untuk bulan sekarang
+    populateWeeks(currentMonth, currentYear);
+
+    // Update minggu saat bulan diubah
+    $('#filterMonth').on('change', function () {
+        const selectedMonth = $(this).val();
+        populateWeeks(selectedMonth, currentYear);
+    });
+
+    // Fungsi untuk memuat data
+    function loadData() {
+        const month = $('#filterMonth').val();
+        const week = $('#filterWeek').val();
+        const year = currentYear; // Default ke tahun sekarang
+
+        $.post('<?= base_url('/sales/getFilteredSales') ?>', { month, week, year }, function (data) {
+            let rows = '';
+            data.forEach(item => {
+                rows += `
+                    <tr>
+                        <td>${months[item.month - 1]}</td>
+                        <td>${item.week}</td>
+                        <td>${item.year}</td>
+                        <td>${item.qty}</td>
+                        <td>${item.total_sales.toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+            $('#salesTable tbody').html(rows);
+        });
+    }
+
+    // Muat data awal saat halaman dibuka
+    loadData();
+
+    // Filter data saat tombol filter diklik
+    $('#filterData').on('click', function () {
+        loadData();
+    });
+
+
+    $('#purchases-table').DataTable({
+    ajax: {
+                url: '<?= base_url('/pembelian/getPembelian') ?>', // Endpoint ke controller
+                dataSrc: 'data' // Akses array 'data' dari JSON
+            },
+    columns: [
+        // { data: 'id' },
+        { data: 'tanggal' },
+        // { data: 'supplier_name' },
+        { data: 'total_harga', render: $.fn.dataTable.render.number(',', '.', 2, 'Rp ') },
+        // {
+        //     data: null,
+        //     render: function (data, type, row) {
+        //         return `<button class="btn btn-info view-details" data-id="${row.id}">Detail</button>`;
+        //     }
+        // }
+    ],
+    footerCallback: function (row, data, start, end, display) {
+        let total = 0;
+        data.forEach(function(item) {
+            total += parseFloat(item.total_harga);
+        });
+
+        // Menampilkan total pada footer
+        $(row).find('#grand-total').html(
+            $.fn.dataTable.render.number(',', '.', 2, 'Rp ').display(total)
+        );
+    },
+    // Event untuk memperbarui total ketika tabel digambar ulang (misalnya saat pencarian)
+    drawCallback: function(settings) {
+        let total = 0;
+        let api = this.api();
+        // Ambil data yang sedang ditampilkan di tabel
+        api.rows({ page: 'current' }).data().each(function (item) {
+            total += parseFloat(item.total_harga);
+        });
+
+        // Update total pada footer
+        $('#grand-total').html($.fn.dataTable.render.number(',', '.', 2, 'Rp ').display(total));
+    }
+});
+
+   
+});
+
+
+
+
+
 function loadSales(date = '') {
 
 if (date === '') {
@@ -197,92 +451,212 @@ $.post('<?= base_url('/sales/getSales') ?>', { date: date }, function (data) {
 });
 }
 
-// document.addEventListener('DOMContentLoaded', function () {
-//     const monthNames = [
-//         "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-//         "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-//     ];
 
-//     const currentYear = new Date().getFullYear();
-//     const currentMonth = new Date().getMonth(); // Indeks bulan (0-11)
+$('#filterMonthly').on('click', function () {
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
 
-//     const monthSelect = document.getElementById('filter-month');
-//     const yearSelect = document.getElementById('filter-year');
+    $.post('<?= base_url('/sales/getMonthlySales') ?>', { start_date: startDate, end_date: endDate }, function (data) {
+        let rows = '';
+        data.forEach(item => {
+            rows += `
+                <tr>
+                    <td>${item.month}</td>
+                    <td>${item.year}</td>
+                    <td>${item.total_sales.toLocaleString()}</td>
+                </tr>
+            `;
+        });
 
-//     const salesTable = document.getElementById('sales-table').querySelector('tbody');
-
-
-    // Isi opsi bulan
-    // monthNames.forEach((month, index) => {
-    //     const option = document.createElement('option');
-    //     option.value = index + 1; // Nilai bulan (1-12)
-    //     option.textContent = month;
-    //     if (index === currentMonth) {
-    //         option.selected = true; // Set bulan default ke bulan ini
-    //     }
-    //     monthSelect.appendChild(option);
-    // });
-
-    // // Isi opsi tahun (-1 dan +1 dari tahun sekarang)
-    // for (let year = currentYear - 1; year <= currentYear + 1; year++) {
-    //     const option = document.createElement('option');
-    //     option.value = year;
-    //     option.textContent = year;
-    //     if (year === currentYear) {
-    //         option.selected = true; // Set tahun default ke tahun ini
-    //     }
-    //     yearSelect.appendChild(option);
-    // }
-
-    // Tambahkan event listener jika diperlukan
-    // monthSelect.addEventListener('change', function () {
-    //   loadSalesData()
-    //     // console.log('Selected Month:', this.value); // Ambil bulan yang dipilih
-    // });
-
-    // yearSelect.addEventListener('change', function () {
-    //   loadSalesData() // console.log('Selected Year:', this.value); // Ambil tahun yang dipilih
-    // });
+        $('#monthlySalesTable tbody').html(rows);
+    });
+});
 
 
-//     function loadSalesData() {
+$('#filterWeekly').on('click', function () {
+    const startDate = $('#startDate').val();
+    const endDate = $('#endDate').val();
 
-// const selectedMonth = monthSelect.value;
-// const selectedYear = yearSelect.value;
+    $.post('<?= base_url('/sales/getWeeklySales') ?>', { start_date: startDate, end_date: endDate }, function (data) {
+        let rows = '';
+        data.forEach(item => {
+            rows += `
+                <tr>
+                    <td>${item.week}</td>
+                    <td>${item.year}</td>
+                    <td>${item.total_sales.toLocaleString()}</td>
+                </tr>
+            `;
+        });
 
-// // Format tanggal untuk dikirim ke server
-// const formattedDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+        $('#weeklySalesTable tbody').html(rows);
+    });
+});
 
-// // Ajax request ke server
-// $.post('<?= base_url('/dash/salesMonth') ?>', { date: formattedDate }, function (data) {
-//     // Kosongkan tabel
 
-//     salesTable.innerHTML = '';
 
-//     // Tambahkan data ke tabel
-//     data.forEach(sale => {
-//         const row = `
-//             <tr>
-//                 <td>${sale.alias}</td>
-//                 <td>${sale.payment_type_name}</td>
-//                 <td>${sale.quantity}</td>
-//                 <td>${sale.total_price}</td>
-//                 <td>${sale.sale_date}</td>
-//             </tr>
-//         `;
-//         salesTable.innerHTML += row;
-//     });
+//Pembelian Script
+
+
+function loadItems() {
+    $.ajax({
+        url: '<?= base_url('/pembelian/getItems') ?>',
+        type: 'GET',
+        success: function (data) {
+            // Buat options dari hasil data
+            let options = '<option value="" disabled selected>Pilih Item</option>';
+            data.forEach(item => {
+                options += `<option value="${item.id}" data-harga="${item.harga}">${item.nama_item}</option>`;
+            });
+
+            // Isi hanya dropdown yang kosong
+            $('.item-select').each(function () {
+                if ($(this).children('option').length === 0) {
+                    $(this).html(options);
+                }
+            });
+        },
+        error: function () {
+            alert('Gagal memuat data item.');
+        }
+    });
+}
+
+$('#add-item').on('click', function () {
+    // Opsi untuk dropdown baru
+    let options = $('.item-select:first').html();
+
+    let newRow = `
+        <tr>
+            <td>
+                <select name="item_id[]" class="item-select" required>
+                    ${options}
+                </select>
+            </td>
+            <td><input type="number" name="qty[]" class="qty-input" required></td>
+            <td><input type="number" name="harga[]" class="harga-input" readonly required></td>
+            <td><input type="number" name="subtotal[]" class="subtotal-input" readonly></td>
+            <td><button type="button" class="remove-item">Hapus</button></td>
+        </tr>
+    `;
+    $('#details-table tbody').append(newRow);
+});
+
+
+$(document).on('click', '.remove-item', function () {
+    $(this).closest('tr').remove();
+});
+
+
+// Saat item dipilih, set harga
+$(document).on('change', '.item-select', function () {
+    let selectedOption = $(this).find('option:selected');
+    let harga = selectedOption.data('harga');
+
+    $(this).closest('tr').find('.harga-input').val(harga);
+    updateSubtotal($(this).closest('tr'));
+});
+
+// Saat qty berubah, hitung subtotal
+$(document).on('input', '.qty-input', function () {
+    updateSubtotal($(this).closest('tr'));
+});
+
+// Fungsi untuk memperbarui subtotal
+function updateSubtotal(row) {
+    let qty = parseInt(row.find('.qty-input').val()) || 0;
+    let harga = parseInt(row.find('.harga-input').val()) || 0;
+
+    let subtotal = qty * harga;
+    row.find('.subtotal-input').val(subtotal);
+}
+
+
+
+$('#purchase-form').on('submit', function (e) {
+    e.preventDefault();
+
+    // Ambil data dari form
+    let purchaseData = {
+        tanggal: $('#tanggal').val(),
+        supplier_name: $('#supplier_name').val(),
+        total_harga: 0, // Akan dihitung dari subtotal
+        details: []
+    };
+
+    // Ambil detail item
+    $('#details-table tbody tr').each(function () {
+        // let item_id = $(this).find('input[name="item_id[]"]').val();
+        let item_id = $(this).find('select[name="item_id[]"]').val(); // Pastikan menggunakan 'select' untuk item_id
+        let qty = parseInt($(this).find('input[name="qty[]"]').val());
+        let harga = parseInt($(this).find('input[name="harga[]"]').val());
+        let subtotal = qty * harga;
+
+        purchaseData.total_harga += subtotal;
+
+        purchaseData.details.push({
+            item_id: item_id,
+            qty: qty,
+            harga: harga,
+            subtotal: subtotal
+        });
+    });
+
+    // Kirim data ke server
+    $.ajax({
+        url: '<?= base_url('/pembelian/createPurchase') ?>',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(purchaseData),
+        success: function (response) {
+            alert('Transaksi berhasil disimpan! ID: ' + response.id);
+            location.reload()
+        },
+        error: function (xhr, status, error) {
+            alert('Gagal menyimpan transaksi: ' + error);
+        }
+    });
+});
+
+
+
+// Fungsi untuk menghitung subtotal per baris
+function calculateSubtotal(row) {
+    const qty = parseFloat(row.find('.qty-input').val()) || 0;
+    const harga = parseFloat(row.find('.harga-input').val()) || 0;
+    const subtotal = qty * harga;
+
+    row.find('.subtotal-input').val(subtotal);
+    return subtotal;
+}
+
+// Fungsi untuk menghitung total keseluruhan
+function calculateTotalKeseluruhan() {
+    let total = 0;
+    $('#details-table tbody tr').each(function () {
+        total += parseFloat($(this).find('.subtotal-input').val()) || 0;
+    });
+
+    $('#total-keseluruhan').val(total);
+}
+
+// Event listener untuk menghitung subtotal dan total saat qty atau harga berubah
+$('#details-table').on('input', '.qty-input, .harga-input', function () {
+    const row = $(this).closest('tr');
+    calculateSubtotal(row);
+    calculateTotalKeseluruhan();
+});
+
+// Event listener untuk menghapus baris dan memperbarui total
+$('#details-table').on('click', '.remove-item', function () {
+    $(this).closest('tr').remove();
+    calculateTotalKeseluruhan();
+});
+
+// Hitung total awal jika data sudah diisi sebelumnya
+// $(document).ready(function () {
+//     calculateTotalKeseluruhan();
 // });
-// }
-
-// loadSalesData();
-
-// });
-
-
-
-
-
 
 
 
